@@ -5,9 +5,13 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="./css/main.css">
+    <link rel="stylesheet" type="text/css" href="./css/toast.css">
+    <link rel="stylesheet" type="text/css" href="./css/style.css">
+    <link rel="stylesheet" href="https://quythanh.tk/assets/css/fontawesomepro/all.css">
 </head>
 <body>
+    <div id="toast"></div> 
     <div class="road">
         <div class="police">
             <div class="light_car"></div>
@@ -20,5 +24,169 @@
             </span>
         </div>
     </div>
+    <div class="app">
+        <div class="header">
+            <ul class="list_option">
+                <li class="item_option">Home</li>
+                <li class="item_option">Service</li>
+                <li class="item_option">Contact</li>
+                <li class="item_option">Feedback</li>
+            </ul>
+        </div>
+        <div class="main">
+           <div class="landscape">
+                <div class="blur">
+                    city illustation
+                </div>
+           </div>
+           <div class="infor_page">
+            <div class="item_infor">
+                <div class="item_res" id="sum">0</div>
+                <div class="item_title">total violation</div>
+            </div>
+            <div class="item_infor">
+                <div class="item_res" id="avg">0</div>
+                <div class="item_title">average violation</div>
+            </div>
+           </div>
+           <div class="control">
+                <div class="control_title">
+                    Filter
+                </div>
+                <div class="control_filter">
+                    <label for="inp_day"> Select Date </label>
+                    <input type="date" class="selectday" name="inp_day">
+                    <div id="date" class="btn_find">Find by date</div>
+                </div>
+                <div class="control_filter">
+                    <label for="inp_day"> License Plate </label>
+                    <input type="text" id="inp_text" class="selectlicense" name="inp_license">
+                    <div id="btn_license" class="btn_find">Find by license</div>
+                </div>
+           </div>
+           <div class="data">
+                <div class="card">
+                    <img src="./images/landscape.webp" alt="">
+                    <div class="card_license">
+                        59A-jdjwd
+                    </div>
+                    <div class="card_date">
+                        Date: 28/11/2003
+                    </div>
+                    <div class="card_speed">
+                        Speed Violation: 55
+                    </div>
+                </div>
+                
+                
+           </div>
+           <div class="footer">
+
+           </div>
+        </div>
+    </div>
+    <script src="toast.js"></script>
+    <script src="app.js"></script>
+    <script src="./services/showinform.js"></script>
+    <script>
+        var data;
+        if(document.querySelector(".app").style.display == "flex"){
+            setInterval(function(){
+                const light = document.querySelector(".light_car");
+                light == "none" ? light = "block" : light = "none";
+            },1000);
+        }
+        
+        setTimeout(function(){
+            fetch('https://nkch-be.onrender.com/managercars/getdata', {
+            headers: {
+                'Accept': 'application/json'
+            }})
+            .then(response => response.text())
+            .then(text =>{
+                document.querySelector(".road").remove();
+                document.body.style.backgroundColor = "white";
+                toast({
+                    title: "Log data successful",
+                    message: "Welcome to our website.",
+                    type: "success",
+                    duration: 5000
+                });
+                document.querySelector(".app").style.display ="flex";
+                document.querySelector("body").style.overflowY ="auto";
+                data = JSON.parse(text).listdata;
+                showAllViolent(data.reverse(),document.querySelector(".data"))
+                document.querySelector("#sum").innerHTML = data.length;
+                var max = new Date(data[0].date);
+                var min = new Date(data[0].date);
+                for(i of data){
+                    tmp = new Date(i.date);
+                    if(tmp > max){
+                        max = tmp;
+                    }
+                    if(tmp < min){
+                        min = tmp;
+                    }
+                }
+                sumday = ((max - min)/(24 * 60 * 60 * 1000))
+                console.log(sumday)
+                if(sumday!=0){
+                    document.querySelector("#avg").innerHTML = data.length/((max - min)/(24 * 60 * 60 * 1000))
+                }else{
+                    document.querySelector("#avg").innerHTML = data.length
+                }
+                
+            })
+        }, 1000);
+
+        document.querySelector("#date").onclick = () =>{
+            const tmp = [];
+            const d = new Date(document.querySelector(".selectday").value);
+            var stringdate ="";
+            if(d.getMonth() + 1 < 10){
+                stringdate += "0";
+            }
+            stringdate += (d.getMonth() + 1).toString();
+            stringdate += "/";
+            if(d.getDate()< 10){
+                stringdate += "0";
+            }
+            stringdate += d.getDate().toString();
+            stringdate += "/";
+            stringdate += d.getFullYear().toString();
+            console.log(stringdate)
+            for(e of data){
+                if(e.date == stringdate){
+                    tmp.push(e);
+                }
+            }
+            if(tmp.length == 0){
+                document.querySelector(".data").innerHTML = `${stringdate} not found `
+                document.querySelector(".data").style.justifyContent = "center"
+            }else{
+                showAllViolent(tmp,document.querySelector(".data"));
+                document.querySelector(".data").style.justifyContent = "flex-start"
+            }
+
+        }
+        document.querySelector("#btn_license").onclick = () =>{
+            const tmp = [];
+            const t = document.querySelector(".selectlicense").value;
+            for(e of data){
+                if(e.licensePlate.includes(t)){
+                    tmp.push(e);
+                }
+            }
+            if(tmp.length == 0){
+                document.querySelector(".data").innerHTML = `${t} not found `
+                document.querySelector(".data").style.justifyContent = "center"
+            }else{
+                showAllViolent(tmp,document.querySelector(".data"));
+                document.querySelector(".data").style.justifyContent = "flex-start"
+            }
+
+        }
+
+    </script>
 </body>
 </html>
